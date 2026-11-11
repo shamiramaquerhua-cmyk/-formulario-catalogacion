@@ -127,18 +127,23 @@ def pestaña(nombre, columnas):
 
 
 @st.cache_data(ttl=600, show_spinner=False)
+def _equipos_hoja():
+    """Lee la pestaña Equipos. Si falla, lanza error (y no queda guardado en caché)."""
+    filas = libro().worksheet(HOJA_EQ).get_all_records(numericise_ignore=["all"])
+    d = {str(r["Equipo"]).strip().upper(): {k: str(r.get(k, "")).strip() for k in
+         ("Marca", "Flota", "Clase de flota", "Modelo", "Nombre del equipo")} for r in filas if str(r.get("Equipo", "")).strip()}
+    if not d:
+        raise ValueError("pestaña Equipos vacía")
+    return d
+
+
 def equipos():
-    """Equipo -> datos (Marca, Flota, Clase de flota, Modelo, Nombre del equipo), desde la pestaña Equipos
-    (la actualiza la PC de Planeamiento). Si no existe, solo la marca por defecto."""
+    """Equipo -> datos, desde la pestaña Equipos (la actualiza la PC de Planeamiento con ACTUALIZAR_BASE).
+    Si todavía no existe, usa la lista corta por defecto y vuelve a intentar en la siguiente carga."""
     try:
-        filas = libro().worksheet(HOJA_EQ).get_all_records(numericise_ignore=["all"])
-        d = {str(r["Equipo"]).strip().upper(): {k: str(r.get(k, "")).strip() for k in
-             ("Marca", "Flota", "Clase de flota", "Modelo", "Nombre del equipo")} for r in filas if str(r.get("Equipo", "")).strip()}
-        if d:
-            return d
+        return _equipos_hoja()
     except Exception:
-        pass
-    return {e: {"Marca": m} for e, m in EQUIPOS_DEF.items()}
+        return {e: {"Marca": m} for e, m in EQUIPOS_DEF.items()}
 
 
 def guardar(codigo, salida, adjuntos):
