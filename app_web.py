@@ -68,7 +68,7 @@ st.markdown(f"""
 .paso span {{background:{ROJO}; color:#fff; border-radius:3px; min-width:26px; height:26px; display:inline-flex;
             align-items:center; justify-content:center; font-weight:700;}}
 .paso b {{text-transform:uppercase; letter-spacing:.5px;}}
-input[aria-label="Solicitante *"] {{text-transform:uppercase;}}
+input, textarea {{text-transform:uppercase;}}
 </style>""", unsafe_allow_html=True)
 logo = f'<img src="data:image/png;base64,{base64.b64encode(LOGO.read_bytes()).decode()}">' if LOGO.exists() else ""
 st.markdown(f"""<div class="cab">{logo}<div><h1>Solicitud de catalogación de materiales</h1>
@@ -99,7 +99,7 @@ if clave and not st.session_state.get("ok_clave"):
     st.write("Ingrese el código de acceso que le entregó Planeamiento y Confiabilidad Mina.")
     c = st.text_input("Código de acceso", type="password")
     if st.button("Ingresar", type="primary"):
-        if c.strip() == clave:
+        if c.strip().upper() == clave.strip().upper():
             st.session_state["ok_clave"] = True; st.rerun()
         else:
             st.error("Código incorrecto.")
@@ -261,7 +261,7 @@ if not filas.empty:
 # ---------------------------------------------------------------- 3. observaciones
 paso(3, "Observaciones")
 obs = st.text_area("Observaciones (opcional)", placeholder="Algún comentario sobre la solicitud...",
-                   label_visibility="collapsed", height=90).strip()
+                   label_visibility="collapsed", height=90).strip().upper()
 adjuntos = st.file_uploader(f"Archivos adicionales (opcional): PDF, Excel, Word, imágenes, TXT... · máx. {MAX_MB} MB c/u",
                             accept_multiple_files=True, key=f"adj_{st.session_state.get('tabla_v', 0)}") or []
 malos = [f.name for f in adjuntos if Path(f.name).suffix.lower() in BLOQUEADOS or f.size > MAX_MB * 1024 * 1024]
